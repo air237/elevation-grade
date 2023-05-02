@@ -73,7 +73,7 @@ public class Main {
 
     private static Document getDocument() throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("src/main/resources/TdZ_hosszu_2022.gpx"));
+        Document document = documentBuilder.parse(new File("src/main/resources/route.gpx"));
         document.getDocumentElement().normalize();
         return document;
     }
