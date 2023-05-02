@@ -14,28 +14,42 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
-        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        Document doc = builder.parse(new File("src/main/resources/TdZ_hosszu_2022.gpx"));
-        doc.getDocumentElement().normalize();
+        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document document = documentBuilder.parse(new File("src/main/resources/TdZ_hosszu_2022.gpx"));
+        document.getDocumentElement().normalize();
 
-        NodeList nodeList = doc.getElementsByTagName("trkpt");
-        for (int i = 0; i < 2; i++) {
-            Node first = nodeList.item(i);
-            NamedNodeMap attributes = first.getAttributes();
-            Node lat = attributes.getNamedItem("lat");
-            Node lon = attributes.getNamedItem("lon");
-            System.out.println("lat: " + lat.getNodeValue());
-            System.out.println("lon: " + lon.getNodeValue());
+        NodeList nodeListTrkpt = document.getElementsByTagName("trkpt");
+        int lengthNl = nodeListTrkpt.getLength();
+        float lat;
+        float lon;
+        float ele;
 
-            NodeList childNodes = first.getChildNodes();
-            Node item = childNodes.item(1);
-            if (item.getNodeName().equals("ele")) {
-                Node firstChild = item.getFirstChild();
-                String nodeValue = firstChild.getNodeValue();
-                System.out.println("ele: " + nodeValue);
+        for (int i = 0; i < lengthNl; i++) {
+            Node nodeTrkpt = nodeListTrkpt.item(i);
+            NamedNodeMap attributesNodeTrkpt = nodeTrkpt.getAttributes();
+            Node nodeLat = attributesNodeTrkpt.getNamedItem("lat");
+            Node nodeLon = attributesNodeTrkpt.getNamedItem("lon");
+            String nodeLatNodeValue = nodeLat.getNodeValue();
+            String nodeLonNodeValue = nodeLon.getNodeValue();
+            System.out.println("nodeLat: " + nodeLatNodeValue);
+            System.out.println("nodeLon: " + nodeLonNodeValue);
+            lat = Float.parseFloat(nodeLatNodeValue);
+            lon = Float.parseFloat(nodeLonNodeValue);
+
+            NodeList childNodesNodeTrkpt = nodeTrkpt.getChildNodes();
+            int length = childNodesNodeTrkpt.getLength();
+            for (int j = 0; j < length; j++) {
+                Node item = childNodesNodeTrkpt.item(j);
+                if (item.getNodeName().equals("ele")) {
+                    Node nodeEle = item.getFirstChild();
+                    String nodeValueEle = nodeEle.getNodeValue();
+                    System.out.println("ele: " + nodeValueEle);
+                    ele = Float.parseFloat(nodeValueEle);
+                    break;
+                }
             }
 
-            System.out.println("\n");
+            System.out.println("");
         }
     }
 }
