@@ -19,9 +19,7 @@ public class Main {
 
 
     public Main() throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("src/main/resources/TdZ_hosszu_2022.gpx"));
-        document.getDocumentElement().normalize();
+        Document document = getDocument();
 
         float latPrev = -1;
         float lonPrev = -1;
@@ -57,17 +55,7 @@ public class Main {
                     ele = Float.parseFloat(nodeValueEle);
 
                     if (latPrev != -1) {
-                        double distance = getDistance(latPrev, lonPrev, lat, lon);
-//                        double distance = distance(latPrev, lonPrev, lat, lon);
-                        System.out.println("distance: "+ distance);
-
-
-                        float elevation = ele - elePrev;
-                        System.out.println("elevation: "+ elevation);
-
-                        double grade = (elevation / distance)*100;
-                        System.out.println("grade: "+ grade);
-
+                        calculateGrade(latPrev, lonPrev, elePrev, lat, lon, ele);
                     }
 
                     elePrev = ele;
@@ -80,6 +68,24 @@ public class Main {
 
             System.out.println("");
         }
+    }
+
+    private void calculateGrade(float latPrev, float lonPrev, float elePrev, float lat, float lon, float ele) {
+        double distance = getDistance(latPrev, lonPrev, lat, lon);
+        System.out.println("distance: "+ distance);
+
+        float elevation = ele - elePrev;
+        System.out.println("elevation: "+ elevation);
+
+        double grade = (elevation / distance)*100;
+        System.out.println("grade: "+ grade);
+    }
+
+    private static Document getDocument() throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document document = documentBuilder.parse(new File("src/main/resources/TdZ_hosszu_2022.gpx"));
+        document.getDocumentElement().normalize();
+        return document;
     }
 
     private double distance(double lat1, double lon1, double lat2, double lon2) {
