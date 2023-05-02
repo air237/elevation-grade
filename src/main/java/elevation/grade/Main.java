@@ -11,6 +11,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class Main {
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
@@ -19,6 +22,7 @@ public class Main {
 
 
     public Main() throws ParserConfigurationException, IOException, SAXException {
+        List<Integer> grades = new ArrayList<>();
         Document document = getDocument();
 
         float latPrev = -1;
@@ -55,7 +59,8 @@ public class Main {
                     ele = Float.parseFloat(nodeValueEle);
 
                     if (latPrev != -1) {
-                        calculateGrade(latPrev, lonPrev, elePrev, lat, lon, ele);
+                        int grade = calculateGrade(latPrev, lonPrev, elePrev, lat, lon, ele);
+                        grades.add(grade);
                     }
 
                     elePrev = ele;
@@ -68,9 +73,14 @@ public class Main {
 
             System.out.println("");
         }
+        System.out.println("grades: "+grades);
+        System.out.println("\n");
+
+        List<Integer> list = grades.stream().sorted().toList();
+        System.out.println("sorted: "+list);
     }
 
-    private void calculateGrade(float latPrev, float lonPrev, float elePrev, float lat, float lon, float ele) {
+    private int calculateGrade(float latPrev, float lonPrev, float elePrev, float lat, float lon, float ele) {
         double distance = getDistance(latPrev, lonPrev, lat, lon);
         System.out.println("distance: "+ distance);
 
@@ -78,7 +88,11 @@ public class Main {
         System.out.println("elevation: "+ elevation);
 
         double grade = (elevation / distance)*100;
-        System.out.println("grade: "+ grade);
+        int IntValue = (int) Math.round(grade);
+
+        System.out.println("grade: "+ IntValue);
+
+        return IntValue;
     }
 
     private static Document getDocument() throws ParserConfigurationException, SAXException, IOException {
