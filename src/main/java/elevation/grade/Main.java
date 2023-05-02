@@ -12,41 +12,27 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class Main {
-    public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
-        new Main();
-    }
+    static final double earthRadius = 6371; // Approximate radius of the earth in kilometers
 
 
     public Main() throws ParserConfigurationException, IOException, SAXException {
-        List<Integer> grades = new ArrayList<>();
+        List<Coord> coords = new ArrayList<>();
+        Coord coordPrev = null;
+        Coord coord;
+
         Document document = getDocument();
-
-        float latPrev = -1;
-        float lonPrev = -1;
-        float elePrev = -1;
-        float lat;
-        float lon;
-        float ele;
-
         NodeList nodeListTrkpt = document.getElementsByTagName("trkpt");
         int lengthNl = nodeListTrkpt.getLength();
         for (int i = 0; i < lengthNl; i++) {
+            coord = new Coord();
             Node nodeTrkpt = nodeListTrkpt.item(i);
             NamedNodeMap attributesNodeTrkpt = nodeTrkpt.getAttributes();
-            Node nodeLat = attributesNodeTrkpt.getNamedItem("lat");
-            Node nodeLon = attributesNodeTrkpt.getNamedItem("lon");
-            String nodeLatNodeValue = nodeLat.getNodeValue();
-            String nodeLonNodeValue = nodeLon.getNodeValue();
-            System.out.println("nodeLat: " + nodeLatNodeValue);
-            System.out.println("nodeLon: " + nodeLonNodeValue);
-            lat = Float.parseFloat(nodeLatNodeValue);
-            lon = Float.parseFloat(nodeLonNodeValue);
-            System.out.println("latPrev: " + latPrev);
-            System.out.println("lonPrev: " + lonPrev);
+            coord.setLat(getParsedFloat(attributesNodeTrkpt, "lat"));
+            coord.setLon(getParsedFloat(attributesNodeTrkpt, "lon"));
 
             NodeList childNodesNodeTrkpt = nodeTrkpt.getChildNodes();
             int length = childNodesNodeTrkpt.getLength();
@@ -55,44 +41,34 @@ public class Main {
                 if (item.getNodeName().equals("ele")) {
                     Node nodeEle = item.getFirstChild();
                     String nodeValueEle = nodeEle.getNodeValue();
-                    System.out.println("ele: " + nodeValueEle);
-                    ele = Float.parseFloat(nodeValueEle);
+                    coord.setEle(Float.parseFloat(nodeValueEle));
 
-                    if (latPrev != -1) {
-                        int grade = calculateGrade(latPrev, lonPrev, elePrev, lat, lon, ele);
-                        grades.add(grade);
+                    if (coordPrev != null) {
+                        int grade = calculateGrade(coordPrev, coord);
+                        coord.setGrade(grade);
+                        coords.add(coord);
                     }
 
-                    elePrev = ele;
+                    coordPrev = coord;
                     break;
                 }
             }
-
-            latPrev = lat;
-            lonPrev = lon;
-
-            System.out.println("");
         }
-        System.out.println("grades: "+grades);
-        System.out.println("\n");
 
-        List<Integer> list = grades.stream().sorted().toList();
-        System.out.println("sorted: "+list);
+        Comparator<Coord> comparator = Comparator.comparingInt(Coord::getGrade);
+        List<Coord> sorted = coords.stream().sorted(comparator).toList();
+        System.out.println(sorted);
     }
 
-    private int calculateGrade(float latPrev, float lonPrev, float elePrev, float lat, float lon, float ele) {
-        double distance = getDistance(latPrev, lonPrev, lat, lon);
-        System.out.println("distance: "+ distance);
+    public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
+        new Main();
+    }
 
-        float elevation = ele - elePrev;
-        System.out.println("elevation: "+ elevation);
-
-        double grade = (elevation / distance)*100;
-        int IntValue = (int) Math.round(grade);
-
-        System.out.println("grade: "+ IntValue);
-
-        return IntValue;
+    private static float getParsedFloat(NamedNodeMap attributesNodeTrkpt, String name) {
+        Node nodeLat = attributesNodeTrkpt.getNamedItem(name);
+        String nodeLatNodeValue = nodeLat.getNodeValue();
+        float parsedFloat = Float.parseFloat(nodeLatNodeValue);
+        return parsedFloat;
     }
 
     private static Document getDocument() throws ParserConfigurationException, SAXException, IOException {
@@ -102,25 +78,27 @@ public class Main {
         return document;
     }
 
-    private double distance(double lat1, double lon1, double lat2, double lon2) {
-        if ((lat1 == lat2) && (lon1 == lon2)) {
-            return 0;
-        }
-        double theta = lon1 - lon2;
-        double dist = Math.sin(Math.toRadians(lat1)) * Math.sin(Math.toRadians(lat2)) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.cos(Math.toRadians(theta));
-        dist = Math.acos(dist);
-        dist = Math.toDegrees(dist);
-        dist = dist * 60 * 1.1515;
-        return (dist);
+    private int calculateGrade(Coord coordPrev, Coord coord) {
+        double distance = getDistance(coordPrev.getLat(), coordPrev.getLon(), coord.getLat(), coord.getLon());
+        System.out.println("distance: " + distance);
+
+        float elevation = coord.getEle() - coordPrev.getEle();
+        System.out.println("elevation: " + elevation);
+
+        double grade = (elevation / distance) * 100;
+        int IntValue = (int) Math.round(grade);
+
+        System.out.println("grade: " + IntValue);
+
+        return IntValue;
     }
 
-     static final double earthRadius = 6371; // Approximate radius of the earth in kilometers
-
     /**
-     * Get the distance in kilometers between two coordinates.
-     * @param lat1 Latitude of the first coordinate, in degrees
+     * Get the distance in meters between two coordinates.
+     *
+     * @param lat1  Latitude of the first coordinate, in degrees
      * @param long1 Longitude of the first coordinate, in degrees
-     * @param lat2 Latitude of the second coordinate, in degrees
+     * @param lat2  Latitude of the second coordinate, in degrees
      * @param long2 Longitude of the second coordinate, in degrees
      * @return Distance in kilometers
      */
@@ -128,7 +106,7 @@ public class Main {
         double distance = Math.acos(Math.sin(lat2 * Math.PI / 180.0) * Math.sin(lat1 * Math.PI / 180.0) +
                 Math.cos(lat2 * Math.PI / 180.0) * Math.cos(lat1 * Math.PI / 180.0) *
                         Math.cos((long1 - long2) * Math.PI / 180.0)) * earthRadius;
-        return distance *1000;
+        return distance * 1000;
     }
 
 }
