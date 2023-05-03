@@ -56,8 +56,7 @@ public class Main {
         }
 
         Comparator<Coord> comparator = Comparator.comparingInt(Coord::getGrade);
-        List<Coord> sorted = coords.stream().sorted(comparator).toList();
-        System.out.println(sorted);
+        coords.stream().sorted(comparator).forEach(coord1 -> System.out.println(coord1.getGrade()+"% "+ coord1.link()));
     }
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
