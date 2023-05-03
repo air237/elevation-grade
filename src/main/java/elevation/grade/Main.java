@@ -44,6 +44,8 @@ public class Main {
                     coord.setEle(Float.parseFloat(nodeValueEle));
 
                     if (coordPrev != null) {
+                        coord.setLatPrev(coordPrev.getLat());
+                        coord.setLonPrev(coordPrev.getLon());
                         int grade = calculateGrade(coordPrev, coord);
                         coord.setGrade(grade);
                         coords.add(coord);
@@ -56,7 +58,7 @@ public class Main {
         }
 
         Comparator<Coord> comparator = Comparator.comparingInt(Coord::getGrade);
-        coords.stream().sorted(comparator).forEach(coord1 -> System.out.println(coord1.getGrade()+"% "+ coord1.link()));
+        coords.stream().sorted(comparator).forEach(coord1 -> System.out.println(coord1.getGrade()+"% "+ coord1.direction()));
     }
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
